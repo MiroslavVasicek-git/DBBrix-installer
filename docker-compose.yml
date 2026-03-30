@@ -1,15 +1,13 @@
-version: "3.9"
-
 services:
   traefik:
     image: traefik:v3.0
     command:
-      - "--providers.docker=true"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.le.acme.email=${EMAIL}"
-      - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
-      - "--certificatesresolvers.le.acme.httpchallenge.entrypoint=web"
+      - --providers.docker=true
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.le.acme.email=${EMAIL}
+      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
     ports:
       - "80:80"
       - "443:443"
@@ -18,26 +16,29 @@ services:
       - ./letsencrypt:/letsencrypt
 
   frontend:
-    image: ghcr.io/om/MiroslavVasicek-git/dbbrix-frontend:latest
+    image: ghcr.io/miroslavvasicek-git/dbbrix-frontend:latest
+    restart: always
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN}`)"
-      - "traefik.http.routers.frontend.entrypoints=websecure"
-      - "traefik.http.routers.frontend.tls.certresolver=le"
+      - traefik.enable=true
+      - traefik.http.routers.frontend.rule=Host(${DOMAIN})
+      - traefik.http.routers.frontend.entrypoints=websecure
+      - traefik.http.routers.frontend.tls.certresolver=le
 
   backend:
-    image: ghcr.io/om/MiroslavVasicek-git/dbbrix-backend:latest
+    image: ghcr.io/miroslavvasicek-git/dbbrix-backend:latest
+    restart: always
 
   nginx-backend:
     image: nginx:alpine
+    restart: always
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - backend
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`${DOMAIN}`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.backend.entrypoints=websecure"
-      - "traefik.http.routers.backend.tls.certresolver=le"
-      - "traefik.http.middlewares.api-stripprefix.stripprefix.prefixes=/api"
-      - "traefik.http.routers.backend.middlewares=api-stripprefix"
+      - traefik.enable=true
+      - traefik.http.routers.backend.rule=Host(${DOMAIN}) && PathPrefix(/api)
+      - traefik.http.routers.backend.entrypoints=websecure
+      - traefik.http.routers.backend.tls.certresolver=le
+      - traefik.http.middlewares.api-stripprefix.stripprefix.prefixes=/api
+      - traefik.http.routers.backend.middlewares=api-stripprefix
