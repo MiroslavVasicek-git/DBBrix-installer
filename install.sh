@@ -23,10 +23,6 @@ read -p "📧 Zadej email (pro HTTPS): " EMAIL
 export DOMAIN=$DOMAIN
 export EMAIL=$EMAIL
 
-# login do GHCR
-echo "🔐 Login do registry"
-docker login ghcr.io
-
 # stažení compose
 echo "📥 Stahuji docker-compose.yml"
 curl -O https://raw.githubusercontent.com/MiroslavVasicek-git//DBBrix-installer//main/docker-compose.yml
