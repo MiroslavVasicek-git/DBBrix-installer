@@ -3,6 +3,7 @@ services:
     image: traefik:v3.0
     command:
       - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
       - --certificatesresolvers.le.acme.email=${EMAIL}
@@ -19,10 +20,11 @@ services:
     image: ghcr.io/miroslavvasicek-git/dbbrix-frontend:latest
     restart: always
     labels:
-      - traefik.enable=true
-      - traefik.http.routers.frontend.rule=Host(${DOMAIN})
-      - traefik.http.routers.frontend.entrypoints=websecure
-      - traefik.http.routers.frontend.tls.certresolver=le
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=le"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
 
   backend:
     image: ghcr.io/miroslavvasicek-git/dbbrix-backend:latest
@@ -36,9 +38,10 @@ services:
     depends_on:
       - backend
     labels:
-      - traefik.enable=true
-      - traefik.http.routers.backend.rule=Host(${DOMAIN}) && PathPrefix(/api)
-      - traefik.http.routers.backend.entrypoints=websecure
-      - traefik.http.routers.backend.tls.certresolver=le
-      - traefik.http.middlewares.api-stripprefix.stripprefix.prefixes=/api
-      - traefik.http.routers.backend.middlewares=api-stripprefix
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`${DOMAIN}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls.certresolver=le"
+      - "traefik.http.middlewares.api-stripprefix.stripprefix.prefixes=/api"
+      - "traefik.http.routers.backend.middlewares=api-stripprefix"
+      - "traefik.http.services.backend.loadbalancer.server.port=80"
