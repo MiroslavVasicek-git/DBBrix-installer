@@ -18,7 +18,7 @@ services:
       - ./letsencrypt:/letsencrypt
 
   frontend:
-    image: ghcr.io/TVUJ_USERNAME/dbbrix-frontend:latest
+    image: ghcr.io/om/MiroslavVasicek-git/dbbrix-frontend:latest
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`${DOMAIN}`)"
@@ -26,7 +26,7 @@ services:
       - "traefik.http.routers.frontend.tls.certresolver=le"
 
   backend:
-    image: ghcr.io/TVUJ_USERNAME/dbbrix-backend:latest
+    image: ghcr.io/om/MiroslavVasicek-git/dbbrix-backend:latest
 
   nginx-backend:
     image: nginx:alpine
