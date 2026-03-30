@@ -1,45 +1,90 @@
 #!/bin/bash
 set -e
 
-echo "DBBrix instalace"
+echo "================================="
+echo "   DBBrix instalace"
+echo "================================="
 
-# kontrola Dockeru
+# -----------------------------
+# VSTUPY (funguje i pro curl | bash)
+# -----------------------------
+if [ -z "$DOMAIN" ]; then
+  read -p "Zadej domenu (napr. app.mojedomena.cz): " DOMAIN
+fi
+
+if [ -z "$EMAIL" ]; then
+  read -p "Zadej email (pro HTTPS): " EMAIL
+fi
+
+export DOMAIN=$DOMAIN
+export EMAIL=$EMAIL
+
+echo ""
+echo "Domena: $DOMAIN"
+echo "Email:  $EMAIL"
+echo ""
+
+# -----------------------------
+# DOCKER INSTALL
+# -----------------------------
 if ! command -v docker &> /dev/null
 then
     echo "Instaluji Docker..."
     curl -fsSL https://get.docker.com | sh
 fi
 
-# kontrola docker compose
+# docker compose check
 if ! docker compose version &> /dev/null
 then
-    echo "Docker Compose není dostupný"
-    exit 1
+    echo "Docker Compose plugin chybi -> instaluji"
+    apt-get update -y
+    apt-get install -y docker-compose-plugin
 fi
 
-# vstupy
-echo ""
-read -p "Zadej domenu (napr. app.mojedomena.cz): " DOMAIN
-read -p "Zadej email (pro HTTPS): " EMAIL
 
-export DOMAIN=$DOMAIN
-export EMAIL=$EMAIL
+# -----------------------------
+# SLOZKA
+# -----------------------------
+mkdir -p ~/dbbrix
+cd ~/dbbrix
 
-# slozka
-mkdir -p dbbrix
-cd dbbrix
-
-# download
-echo "Stahuji docker-compose.yml"
+# -----------------------------
+# DOWNLOAD COMPOSE
+# -----------------------------
+echo "Stahuji docker-compose.yml..."
 curl -sSL https://raw.githubusercontent.com/MiroslavVasicek-git/DBBrix-installer/main/docker-compose.yml -o docker-compose.yml
 
-# cert slozka
+# -----------------------------
+# NGINX CONFIG (AUTO GENERACE)
+# -----------------------------
+echo "Generuji nginx.conf..."
+
+cat <<EOF > nginx.conf
+server {
+    listen 80;
+
+    location / {
+        proxy_pass http://backend:9000;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+    }
+}
+EOF
+
+# -----------------------------
+# CERT STORAGE
+# -----------------------------
 mkdir -p letsencrypt
 
-# start
+# -----------------------------
+# START
+# -----------------------------
 echo "Spoustim aplikaci..."
 docker compose up -d
 
 echo ""
+echo "================================="
 echo "Hotovo!"
+echo "================================="
 echo "Otevri: https://$DOMAIN"
+echo ""
