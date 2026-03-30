@@ -1,35 +1,50 @@
+```bash
 #!/bin/bash
+set -e
 
 echo "🚀 DBBrix instalace"
 
-# kontrola dockeru
+# --- kontrola Dockeru ---
 if ! command -v docker &> /dev/null
 then
     echo "📦 Instaluji Docker..."
     curl -fsSL https://get.docker.com | sh
 fi
 
-if ! command -v docker compose &> /dev/null
+# --- kontrola docker compose ---
+if ! docker compose version &> /dev/null
 then
-    echo "📦 Instaluji Docker Compose..."
-    apt-get install -y docker-compose-plugin
+    echo "❌ Docker Compose není dostupný"
+    exit 1
 fi
 
-# dotazy na uživatele
-read -p "🌐 Zadej doménu: " DOMAIN
-read -p "📧 Zadej email (pro HTTPS): " EMAIL
+# --- vstupy od uživatele ---
+echo ""
+read -p "🌐 Zadej doménu (např. app.mojedomena.cz): " DOMAIN
+read -p "📧 Zadej email (pro HTTPS certifikát): " EMAIL
 
-# export pro compose
 export DOMAIN=$DOMAIN
 export EMAIL=$EMAIL
 
-# stažení compose
-echo "📥 Stahuji docker-compose.yml"
-curl -O https://raw.githubusercontent.com/MiroslavVasicek-git//DBBrix-installer//main/docker-compose.yml
+# --- pracovní složka ---
+echo ""
+echo "📁 Vytvářím složku dbbrix..."
+mkdir -p dbbrix
+cd dbbrix
 
-# spuštění
+# --- stažení docker-compose ---
+echo "📥 Stahuji docker-compose.yml"
+curl -sSL https://raw.githubusercontent.com/MiroslavVasicek-git/DBBrix-installer/main/docker-compose.yml -o docker-compose.yml
+
+# --- vytvoření složky pro certifikáty ---
+mkdir -p letsencrypt
+
+# --- spuštění ---
+echo ""
 echo "🚀 Spouštím aplikaci..."
 docker compose up -d
 
-echo "✅ Hotovo!"
+echo ""
+echo "✅ Instalace dokončena!"
 echo "👉 Otevři: https://$DOMAIN"
+```
