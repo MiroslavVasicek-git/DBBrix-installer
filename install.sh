@@ -1,4 +1,3 @@
-```bash
 #!/bin/bash
 set -e
 
@@ -47,4 +46,3 @@ docker compose up -d
 echo ""
 echo "✅ Instalace dokončena!"
 echo "👉 Otevři: https://$DOMAIN"
-```
